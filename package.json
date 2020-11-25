@@ -1,0 +1,24 @@
+{
+  "name": "bands",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "bands": "./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "bandcamp-scraper": "^1.2.8",
+    "dateformat": "^4.0.0",
+    "disconnect": "^1.2.1",
+    "inflected": "^2.1.0",
+    "minimist": "^1.2.5",
+    "node-html-parser": "^2.0.0"
+  }
+}
