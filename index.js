@@ -20,7 +20,7 @@ const getAlbumInfo = util.promisify(bandcamp.getAlbumInfo);
 const metalArchivesAlbumSearchUrl = 'https://www.metal-archives.com/search/ajax-advanced/searching/albums/?';
 
 const DiscogsClientClass = disconnect.Client;
-const discogsClient = new DiscogsClientClass({userToken: process.env.DISCOGS_TOKEN});
+const discogsClient = new DiscogsClientClass({ userToken: process.env.DISCOGS_TOKEN });
 const discogsDB = discogsClient.database();
 
 function log(info) {
@@ -37,13 +37,13 @@ function log(info) {
 
 function getBandcampAlbumInfo() {
   return getAlbumInfo(bandcampUrl).
-  then((albumInfo) => {
-    return {
-      artist: inflector.titleize(albumInfo.artist),
-      title: inflector.titleize(albumInfo.raw.current.title),
-      releaseDate: dateFormat(albumInfo.raw.album_release_date, "mm/dd/yyyy")
-    };
-  });
+    then((albumInfo) => {
+      return {
+        artist: inflector.titleize(albumInfo.artist),
+        title: inflector.titleize(albumInfo.raw.current.title),
+        releaseDate: dateFormat(albumInfo.raw.album_release_date, "mm/dd/yyyy")
+      };
+    });
 }
 
 function getMetalArchivesAlbumURL(info) {
@@ -62,31 +62,31 @@ function getMetalArchivesAlbumURL(info) {
   var encodedParams = `${querystring.encode(params)}&releaseType[]=1&releaseType[]=3`;
 
   return axios.get(`${metalArchivesAlbumSearchUrl}${encodedParams}`)
-  .then((res) => {
-    var albumSearchResults = res.data.aaData;
-    if (albumSearchResults.length >= 1) {
-      var albumLink = parser.parse(albumSearchResults[0][1]);
-      info.metalArchivesAlbumUrl = albumLink.querySelector('a').getAttribute('href');
-    }
-    return info;
-  });
+    .then((res) => {
+      var albumSearchResults = res.data.aaData;
+      if (albumSearchResults.length >= 1) {
+        var albumLink = parser.parse(albumSearchResults[0][1]);
+        info.metalArchivesAlbumUrl = albumLink.querySelector('a').getAttribute('href');
+      }
+      return info;
+    });
 }
 
 function getMetalArchivesLabel(info) {
   if (!info.metalArchivesAlbumUrl) { return Promise.resolve(info); }
 
   return axios.get(info.metalArchivesAlbumUrl)
-  .then((res) => {
-    var albumResponse = parser.parse(res.data);
-    for(let elem of albumResponse.querySelectorAll('a')) {
-      var href = elem.getAttribute('href');
-      if (href && href.includes('labels')) {
-        info.label = elem.text;
-        break;
+    .then((res) => {
+      var albumResponse = parser.parse(res.data);
+      for (let elem of albumResponse.querySelectorAll('a')) {
+        var href = elem.getAttribute('href');
+        if (href && href.includes('labels')) {
+          info.label = elem.text;
+          break;
+        }
       }
-    }
-    return(info);
-  });
+      return (info);
+    });
 }
 
 function getDiscogsLabel(info) {
@@ -97,30 +97,31 @@ function getDiscogsLabel(info) {
     release_title: info.title,
     type: 'release'
   })
-  .then((res) => {
-    var counts = {};
-    var mainLabel;
-    var max = 0;
+    .then((res) => {
+      var counts = {};
+      var mainLabel;
+      var max = 0;
 
-    res.results.forEach((release) => {
-      release.label.forEach((label) => {
-        counts[label] = counts[label] || 0;
-        counts[label] += 1;
-        if (counts[label] > max) {
-          max = counts[label];
-          mainLabel = label;
-        }
+      res.results.forEach((release) => {
+        release.label.forEach((label) => {
+          counts[label] = counts[label] || 0;
+          counts[label] += 1;
+          if (counts[label] > max) {
+            max = counts[label];
+            mainLabel = label;
+          }
+        });
       });
-    });
 
-    info.label = mainLabel;
-    return info;
-  })
+      info.label = mainLabel;
+      return info;
+    })
 }
 
 getBandcampAlbumInfo()
-.then(getMetalArchivesAlbumURL)
-.then(getMetalArchivesLabel)
-.then(getDiscogsLabel)
-.then(log)
-.catch((err) => { console.log(err); })
+  .catch((err) => { console.log(err); })
+  .then(getMetalArchivesAlbumURL)
+  .then(getMetalArchivesLabel)
+  .then(getDiscogsLabel)
+  .then(log)
+  .catch((err) => { console.log(err); })
