@@ -22,5 +22,8 @@
     "inflected": "^2.1.0",
     "minimist": "^1.2.5",
     "node-html-parser": "^2.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.15.0"
   }
 }
