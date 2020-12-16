@@ -26,6 +26,15 @@ const DiscogsClientClass = disconnect.Client;
 const discogsClient = new DiscogsClientClass({ userToken: process.env.DISCOGS_TOKEN });
 const discogsDB = discogsClient.database();
 
+// get, issuing http request
+// extract, parsing http response to acquire specific data
+//   get
+//   extract
+// store, putting the data into info, returning updated info
+
+// Bandcamp get/extract/store happens at the top-level, no wrapper function needed
+// getBandcampAlbumInfo comes with bandcamp-scraper
+// extractBandcampInfo extracts and stores because there is no previous info to update
 function extractBandcampInfo(res) {
   return {
     artist: inflector.titleize(res.artist),
@@ -34,12 +43,18 @@ function extractBandcampInfo(res) {
   };
 }
 
-async function findMetalArchivesLabel(info) {
-  var res = await getMetalArchivesAlbumSearch(info);
-  var url = extractMetalArchivesAlbumUrl(res);
-  return await storeMetalArchivesLabel(url, info);
+// The big goal here is to avoid a global info var
+// getMetalArchivesAlbumSearch has to return a result, it loses reference to info!
+// getMetalArchivesAlbumSearch has a ref to info, so we could nest the
+// extractMetalArchivesAlbumUrl->storeMetalArchivesLabel chain in it,
+// but then that method ends up doing a ton of shit, we're trying to retain some SOLID here
+function findMetalArchivesLabel(info) {
+  return getMetalArchivesAlbumSearch(info)
+    .then(extractMetalArchivesAlbumUrl)
+    .then(url => storeMetalArchivesLabel(url, info));
 }
 
+// gets MetalArchive search results, requires params from info
 function getMetalArchivesAlbumSearch(info) {
   var params = {
     bandName: info.artist,
@@ -58,6 +73,7 @@ function getMetalArchivesAlbumSearch(info) {
   return axios.get(`${metalArchivesAlbumSearchUrl}${encodedParams}`);
 }
 
+// Extracts a specific album url from the search results
 function extractMetalArchivesAlbumUrl(res) {
   var albumSearchResults = res.data.aaData;
   if (albumSearchResults.length >= 1) {
@@ -66,11 +82,21 @@ function extractMetalArchivesAlbumUrl(res) {
   }
 }
 
-async function storeMetalArchivesLabel(url, info) {
+// This forms a nested get/extract/store process
+// If we find an album url, we have to get/extract/store the label
+function storeMetalArchivesLabel(url, info) {
   if (!url) { return info; }
-  var res = await axios.get(url);
-  info.label = extractMetalArchivesLabel(res);
-  return info;
+
+  // There would normally be a getMetalArchivesAlbum but that's overkill,
+  // just use axios.get(url) directly
+  // Same with store label, doesn't really need its own function
+  // We could also wrap the entire sub-G/E/S process, but not needed
+  return axios.get(url)
+    .then(extractMetalArchivesLabel)
+    .then(label => {
+      info.label = label;
+      return info;
+    });
 }
 
 function extractMetalArchivesLabel(res) {
@@ -83,17 +109,19 @@ function extractMetalArchivesLabel(res) {
   }
 }
 
-async function findDiscogsLabel(info) {
+function findDiscogsLabel(info) {
   if (info.label) { return info; }
 
-  var res = await discogsDB.search({
+  return discogsDB.search({
     artist: info.artist,
     release_title: info.title,
     type: 'release'
-  });
-
-  info.label = extractDiscogsLabel(res);
-  return info;
+  })
+    .then(extractDiscogsLabel)
+    .then(label => {
+      info.label = label;
+      return info;
+    });
 }
 
 function extractDiscogsLabel(res) {
@@ -127,12 +155,9 @@ function log(info) {
   proc.stdin.end();
 }
 
-async function foo() {
-  var res = await getBandcampAlbumInfo(bandcampUrl)
-  var info = extractBandcampInfo(res);
-  info = await findMetalArchivesLabel(info);
-  info = await findDiscogsLabel(info);
-  log(info);
-}
-
-foo();
+getBandcampAlbumInfo(bandcampUrl)
+  .then(extractBandcampInfo)
+  .then(findMetalArchivesLabel)
+  .then(findDiscogsLabel)
+  .then(log)
+  .catch((err) => { console.log(err); })
