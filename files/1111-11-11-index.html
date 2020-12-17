@@ -1,0 +1,11 @@
+---
+layout: default
+---
+{% capture year %}{{ page.categories[0] }}{% endcapture %}
+{% capture genre %}{{ page.categories[1] }}{% endcapture %}
+{% for album in site.data[year][genre] %}
+<iframe style="border: 0; width: 100%; height: 120px;"
+  src="https://bandcamp.com/EmbeddedPlayer/album={{album.id}}/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/"
+  seamless>
+</iframe>
+{% endfor %}
