@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.0",
-    "bandcamp-scraper": "^1.2.8",
+    "bandcamp-scraper": "masterT/bandcamp-scraper",
     "dateformat": "^4.0.0",
     "disconnect": "^1.2.1",
     "dotenv": "^8.2.0",
@@ -24,6 +24,7 @@
     "node-html-parser": "^2.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.15.0"
+    "eslint": "^7.15.0",
+    "pryjs": "^1.0.3"
   }
 }

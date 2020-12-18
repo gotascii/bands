@@ -2,3 +2,6 @@ node_modules
 .env
 scratch.js
 .DS_Store
+2020/
+_data/
+log.txt
