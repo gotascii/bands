@@ -24,7 +24,6 @@
     "node-html-parser": "^2.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.15.0",
-    "pryjs": "^1.0.3"
+    "eslint": "^7.15.0"
   }
 }
